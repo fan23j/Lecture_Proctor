@@ -44946,6 +44946,10 @@ function store_points(x, y, k) {
     * Checks if the pupils are in the position box on the video
     * // TODO These are all wrong. The latestEyeFeatures will be in 'video' space not 'preview' space, and so need to be converted.
     */
+	
+	var myScope = document.getElementById('yt_player_iframe');      
+
+	
     function checkEyesInValidationBox() {
 
         if (faceFeedbackBox != null && latestEyeFeatures) {
@@ -44998,8 +45002,13 @@ function store_points(x, y, k) {
                 faceFeedbackBox.style.border = 'solid red';
             }
         }
-        else
+        else {
             faceFeedbackBox.style.border = 'solid black';
+			if (bool) {
+				pausePlaying();
+			}
+		}
+		
     }
 
     /**
@@ -45102,8 +45111,8 @@ function store_points(x, y, k) {
 	var to = false;
 	var divWidth = window.innerWidth/4;
 	var divHeight = window.innerHeight/4;
-	var myScope = document.getElementById('yt_player_iframe');      
 	var attentiveTime = 0;
+	var bool = true;
 
     async function loop() {
         if (!paused) {
@@ -45149,7 +45158,6 @@ function store_points(x, y, k) {
                     x += smoothingVals.get(d).x;
                     y += smoothingVals.get(d).y;
                 }
-				
                 var pred = webgazer.util.bound({'x':x/len, 'y':y/len});
                 if (store_points_var) {
                     //drawCoordinates('blue',pred.x,pred.y); //draws the previous predictions
@@ -45170,16 +45178,23 @@ function store_points(x, y, k) {
 								}
 							}
 						}
-						if (to) {
-							store_points_var = false;
-							myScope.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+						if (to || faceFeedbackBox.style.border == 'solid black') {
+							if (bool) {
+								pausePlaying();
+							}
 						}
 						to = true;
 					}
                 } else {
-					if (pred.x >= 400 && pred.x <= 750) {
-						if (pred.y >= 400 && pred.y <= 750) {
-							setTimeout(resumePlaying(), 1500);
+					if (pred.x >= divWidth && pred.x <= 3*divWidth) {
+						if (pred.y >= divHeight && pred.y <= 3*divHeight) {
+							if (!bool) {
+								setTimeout(resumePlaying(), 1000);
+							} else {
+								if (bool) {
+									pausePlaying();
+								}
+							}
 						}
 					}
 				}
@@ -45193,9 +45208,16 @@ function store_points(x, y, k) {
 		}	
     }
 
+	function pausePlaying() {
+		store_points_var = false;
+		myScope.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+		bool = false;
+	}
+	
 	function resumePlaying() {
 		myScope.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
 		store_points_var = true;
+		bool = true;
 	}
     /**
      * Records screen position data based on current pupil feature and passes it
@@ -45337,7 +45359,7 @@ function store_points(x, y, k) {
         videoElement.autoplay = true;
         videoElement.style.display = webgazer.params.showVideo ? 'block' : 'none';
         videoElement.style.position = 'fixed';
-        videoElement.style.top = topDist;
+        videoElement.style.bottom = topDist;
         videoElement.style.left = leftDist;
         // We set these to stop the video appearing too large when it is added for the very first time
         videoElement.style.width = webgazer.params.videoViewerWidth + 'px';
@@ -45355,7 +45377,7 @@ function store_points(x, y, k) {
         faceOverlay.id = webgazer.params.faceOverlayId;
         faceOverlay.style.display = webgazer.params.showFaceOverlay ? 'block' : 'none';
         faceOverlay.style.position = 'fixed';
-        faceOverlay.style.top = topDist;
+        faceOverlay.style.bottom = topDist;
         faceOverlay.style.left = leftDist;
 
         // Feedback box
@@ -45712,7 +45734,7 @@ function store_points(x, y, k) {
         // Compute the boundaries of the face overlay validation box based on the video size
         var tlwh = webgazer.computeValidationBoxSize()
         // Assign them to the object
-        faceFeedbackBox.style.top = tlwh[0] + 'px';
+        faceFeedbackBox.style.bottom = tlwh[0] + 'px';
         faceFeedbackBox.style.left = tlwh[1] + 'px';
         faceFeedbackBox.style.width = tlwh[2] + 'px';
         faceFeedbackBox.style.height = tlwh[3] + 'px';
