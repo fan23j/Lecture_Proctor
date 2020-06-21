@@ -45165,12 +45165,12 @@ function store_points(x, y, k) {
                     store_points(pred.x, pred.y, k);
                     k++;
 					counter++;
-                    if (k == 50) {
+                    if (k == 30) {
                         k = 0;
 						to = true;
                     }
-					if (counter >= 50) {
-						for (x = 0; x < 50; x++) {
+					if (counter >= 30) {
+						for (x = 0; x < 30; x++) {
 							if (xPast50[x] >= divWidth && xPast50[x] <= 3*divWidth) {
 								if (yPast50[x] >= divHeight && yPast50[x] <= 3*divHeight) {
 									attentiveTime += 1;
